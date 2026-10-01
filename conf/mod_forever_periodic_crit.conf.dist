@@ -1,0 +1,70 @@
+[worldserver]
+
+########################################
+# mod-forever-periodic-crit
+#
+# DoT and HoT ticks can crit, as in WoW Forever. No client patch.
+########################################
+
+#
+#    ForeverPeriodicCrit.Enable
+#        Description: Master switch. With 0, ticks crit only where stock 3.3.5 lets them
+#                     (Shadowform, Pandemic, Primal Gore, Flame Shock, Rupture, some glyphs and
+#                     tier sets).
+#        Default:     1
+#
+
+ForeverPeriodicCrit.Enable = 1
+
+#
+#    ForeverPeriodicCrit.Damage
+#        Description: Damage ticks can crit: DoTs, bleeds, poisons and drains.
+#        Default:     1
+#
+
+ForeverPeriodicCrit.Damage = 1
+
+#
+#    ForeverPeriodicCrit.Healing
+#        Description: Heal-over-time ticks can crit.
+#        Default:     1
+#
+
+ForeverPeriodicCrit.Healing = 1
+
+#
+#    ForeverPeriodicCrit.ClassSpellsOnly
+#        Description: Only class spells (and pet abilities) crit. With 0, DoTs and HoTs from
+#                     items, enchants, bandages and racials that aren't class spells crit too.
+#        Default:     1
+#
+
+ForeverPeriodicCrit.ClassSpellsOnly = 1
+
+#
+#    ForeverPeriodicCrit.UseSpellCrit
+#        Description: Comma-separated spell IDs (any rank) of DoTs/HoTs that have no damage
+#                     class in the spell data. The core never lets those crit, so they're listed
+#                     here to crit with the caster's spell crit for their school.
+#                     7001  = Lightwell Renew
+#                     55095 = Frost Fever
+#        Default:     "7001,55095"
+#
+
+ForeverPeriodicCrit.UseSpellCrit = "7001,55095"
+
+#
+#    ForeverPeriodicCrit.ExcludeSpells
+#        Description: Comma-separated spell IDs (any rank) that never crit. The defaults are
+#                     ticks whose amount already comes from a crit or from a heal that could
+#                     crit, so a crit would count twice:
+#                     12654 = Ignite                 12721 = Deep Wounds
+#                     61840 = Righteous Vengeance    54203 = Sheath of Light
+#                     71023 = Languish               63468 = Piercing Shots
+#                     27813 = Blessed Recovery       64891 = Holy Mending
+#                     54957 = Glyph of Flash of Light HoT
+#                     56161 = Glyph of Prayer of Healing HoT
+#        Default:     "12654,12721,61840,54203,71023,63468,27813,64891,54957,56161"
+#
+
+ForeverPeriodicCrit.ExcludeSpells = "12654,12721,61840,54203,71023,63468,27813,64891,54957,56161"
