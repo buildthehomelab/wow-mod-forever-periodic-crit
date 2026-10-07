@@ -46,6 +46,12 @@ Channeled and ground spells that hit through a triggered spell, like Arcane Miss
 Hurricane, Rain of Fire, Volley, Tranquility and Healing Stream Totem, could already crit and
 aren't changed.
 
+## Requirements
+
+- [AzerothCore](https://github.com/azerothcore/azerothcore-wotlk) `master` (WotLK 3.3.5a)
+- A WoW 3.3.5a (12340) client
+- No client patch and no SQL
+
 ## Install
 
 Clone it into your AzerothCore `modules` folder **as `mod-forever-periodic-crit`**, without the
@@ -100,3 +106,23 @@ you had when you cast it.
 - WoW Forever also halved crit damage in PvP for a while, but Blizzard called that a bug. This
   module doesn't do it.
 - Playerbots get it too, since they're players.
+
+## Troubleshooting
+
+- **A DoT or HoT doesn't crit.** One that is already running keeps the crit chance it had when it
+  was cast, until it is refreshed or cast again.
+- **An item, enchant or bandage DoT or HoT doesn't crit.** Only class spells and pet abilities do
+  by default; set `ForeverPeriodicCrit.ClassSpellsOnly = 0` to include the rest.
+- **A spell with no damage class never crits.** The core doesn't allow it. List it in
+  `ForeverPeriodicCrit.UseSpellCrit` to crit with the caster's spell crit (Lightwell Renew and
+  Frost Fever are listed by default).
+
+## Credits
+
+Author: [buildthehomelab](https://github.com/buildthehomelab)
+
+The design follows the WoW Forever private server ruleset. The code is original.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
