@@ -7,8 +7,12 @@
  * tick of a player's DoT, bleed, drain or HoT rolls for a crit with the caster's crit chance for
  * that spell.
  *
- * No client patch: the server decides crits on its own and the 3.3.5 combat log already shows
- * periodic crits.
+ * The talents, glyphs and set bonuses whose only job in stock was to let a DoT or HoT crit
+ * (Primal Gore, Pandemic, Glyph of Living Bomb, Glyph of Explosive Trap, the T9/T10 bonuses) add
+ * +10% crit chance to those ticks instead, so they still do something.
+ *
+ * The server decides crits on its own and the 3.3.5 combat log already shows periodic crits. The
+ * optional client patch (tools/build_patch.py) only rewrites those talents' tooltips.
  *
  * Released under the MIT License.
  */
@@ -33,6 +37,8 @@ namespace
         bool classSpellsOnly = true;
         std::unordered_set<uint32> useSpellCrit;
         std::unordered_set<uint32> excluded;
+        float talentBonus = 10.0f;
+        std::unordered_set<uint32> talentBonusExcluded;
     };
 
     Config config;
@@ -47,6 +53,11 @@ namespace
     // Sheath of Light, Languish, Piercing Shots, Blessed Recovery, Holy Mending, Glyph of Flash of
     // Light and Glyph of Prayer of Healing.
     constexpr char const* DEFAULT_EXCLUDED = "12654,12721,61840,54203,71023,63468,27813,64891,54957,56161";
+
+    // "Ability periodic crit" auras that don't give the talent bonus: Shadowform's (49868) and
+    // every shaman's Flame Shock Passive (75461) come with the class, Improved Immolate rank 3's
+    // (17834, Conflagrate) isn't in its tooltip, and Demonic Immolate (75445) is an NPC spell.
+    constexpr char const* DEFAULT_TALENT_BONUS_EXCLUDED = "49868,75461,17834,75445";
 
     std::unordered_set<uint32> ParseSpellList(std::string const& list)
     {
@@ -123,8 +134,24 @@ namespace
         return chance;
     }
 
-    // The same crit chance the caster would have with a direct hit of this spell. target is
-    // null for ground effects (Consecration, Flamestrike's burn), as in the core.
+    // In stock an "ability periodic crit" aura (Primal Gore, Pandemic, Glyph of Living Bomb, the
+    // T9/T10 bonuses) is what lets a tick crit at all. Every tick crits here, so those auras add
+    // TalentBonus to the chance of the ticks they cover instead.
+    float TalentBonus(Unit const* caster, SpellInfo const* spellInfo)
+    {
+        Player* owner = caster->GetSpellModOwner();
+        if (!owner || config.talentBonus <= 0.0f)
+            return 0.0f;
+
+        for (AuraEffect const* effect : owner->GetAuraEffectsByType(SPELL_AURA_ABILITY_PERIODIC_CRIT))
+            if (!config.talentBonusExcluded.count(effect->GetId()) && effect->IsAffectedOnSpell(spellInfo))
+                return config.talentBonus;
+
+        return 0.0f;
+    }
+
+    // The same crit chance the caster would have with a direct hit of this spell, plus the talent
+    // bonus. target is null for ground effects (Consecration, Flamestrike's burn), as in the core.
     float CalcTickCritChance(Unit const* caster, Unit const* target, SpellInfo const* spellInfo)
     {
         if (spellInfo->DmgClass == SPELL_DAMAGE_CLASS_NONE)
@@ -133,7 +160,7 @@ namespace
                 return 0.0f;
 
             // The core's target side returns 0 for these, so only resilience applies.
-            float chance = SpellCritWithoutDamageClass(caster, spellInfo);
+            float chance = SpellCritWithoutDamageClass(caster, spellInfo) + TalentBonus(caster, spellInfo);
             if (target && !spellInfo->IsPositive())
                 Unit::ApplyResilience(target, &chance, nullptr, false, CR_CRIT_TAKEN_SPELL);
 
@@ -144,6 +171,8 @@ namespace
         float chance = caster->SpellDoneCritChance(nullptr, spellInfo, spellInfo->GetSchoolMask(), attackType, true);
         if (chance <= 0.0f)
             return 0.0f;
+
+        chance += TalentBonus(caster, spellInfo);
 
         // Target side: resilience, crit-taken debuffs, defense skill.
         if (target)
@@ -166,6 +195,8 @@ public:
         config.classSpellsOnly = sConfigMgr->GetOption<bool>("ForeverPeriodicCrit.ClassSpellsOnly", true);
         config.useSpellCrit    = ParseSpellList(sConfigMgr->GetOption<std::string>("ForeverPeriodicCrit.UseSpellCrit", DEFAULT_USE_SPELL_CRIT));
         config.excluded        = ParseSpellList(sConfigMgr->GetOption<std::string>("ForeverPeriodicCrit.ExcludeSpells", DEFAULT_EXCLUDED));
+        config.talentBonus     = sConfigMgr->GetOption<float>("ForeverPeriodicCrit.TalentBonus", 10.0f);
+        config.talentBonusExcluded = ParseSpellList(sConfigMgr->GetOption<std::string>("ForeverPeriodicCrit.TalentBonusExclude", DEFAULT_TALENT_BONUS_EXCLUDED));
     }
 };
 
@@ -205,8 +236,8 @@ public:
             if (!effect || !IsAffectedTick(effect->GetAuraType()))
                 continue;
 
-            // Keep the core's chance when it's higher, e.g. from Shadowform or Pandemic. This also keeps
-            // set bonuses that let an excluded spell crit (Righteous Vengeance with Ret T9).
+            // Keep the core's chance when it's higher. This keeps set bonuses that let an excluded
+            // spell crit (Righteous Vengeance with Ret T9).
             float chance = CalcTickCritChance(caster, target, spellInfo);
             if (chance > effect->GetCritChance())
                 effect->SetCritChance(chance);
