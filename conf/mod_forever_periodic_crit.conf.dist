@@ -3,7 +3,8 @@
 ########################################
 # mod-forever-periodic-crit
 #
-# DoT and HoT ticks can crit, as in WoW Forever. No client patch.
+# DoT and HoT ticks can crit, as in WoW Forever. The client patch from tools/build_patch.py is
+# optional: it only updates the TalentBonus talents' tooltips.
 ########################################
 
 #
@@ -68,3 +69,31 @@ ForeverPeriodicCrit.UseSpellCrit = "7001,55095"
 #
 
 ForeverPeriodicCrit.ExcludeSpells = "12654,12721,61840,54203,71023,63468,27813,64891,54957,56161"
+
+#
+#    ForeverPeriodicCrit.TalentBonus
+#        Description: Extra crit chance, in percent, on the ticks of a DoT or HoT that a talent,
+#                     glyph or set bonus lets crit in stock. Every tick can crit with this module,
+#                     so instead of doing nothing those give this much more: Primal Gore (Rip,
+#                     Lacerate), Pandemic (Corruption, Unstable Affliction), Glyph of Living Bomb,
+#                     Glyph of Explosive Trap, Death Knight T9 melee 4-piece (Blood Plague), Druid
+#                     T9 Balance 2-piece (Moonfire), Druid T9 Restoration 4-piece (Rejuvenation),
+#                     Hunter T9 2-piece (Serpent Sting), Druid T10 Feral 4-piece (Rake). 0 turns it
+#                     off. The tooltips in the client patch say 10%; rebuild it with --bonus to
+#                     match another value.
+#        Default:     10
+#
+
+ForeverPeriodicCrit.TalentBonus = 10
+
+#
+#    ForeverPeriodicCrit.TalentBonusExclude
+#        Description: Comma-separated spell IDs of "ability periodic crit" auras that don't give
+#                     TalentBonus. The defaults come with the class or aren't in a tooltip:
+#                     49868 = Shadowform's DoT crits    75461 = Flame Shock Passive (every shaman)
+#                     17834 = Improved Immolate rank 3 (Conflagrate, not in its tooltip)
+#                     75445 = Demonic Immolate (an NPC spell)
+#        Default:     "49868,75461,17834,75445"
+#
+
+ForeverPeriodicCrit.TalentBonusExclude = "49868,75461,17834,75445"
